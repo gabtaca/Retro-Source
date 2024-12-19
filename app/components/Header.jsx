@@ -9,17 +9,34 @@ import {useAside} from '~/components/Aside';
 export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
   const {shop, menu} = header;
   return (
-    <header className="header">
-      <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
-        <strong>{shop.name}</strong>
-      </NavLink>
-      <HeaderMenu
-        menu={menu}
-        viewport="desktop"
-        primaryDomainUrl={header.shop.primaryDomain.url}
-        publicStoreDomain={publicStoreDomain}
-      />
-      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+    <header className="header w-full justify-center items-center bg-gray-400  border-[4px] rounded-lg border-gray-400">
+      <div className="flex w-full border-[4px] rounded-md border-red-700 justify-center items-center">
+        <div className="flex w-full border-[3px] rounded-md border-gray-300">
+          <div className="flex w-full border-[2px] rounded-md border-red-700 p-2 font-[Silkscreen]">
+            <NavLink
+              className="flex flex-col items-center"
+              prefetch="intent"
+              to="/"
+              style={activeLinkStyle}
+              end
+            >
+              <img
+                src="/images/logo_arcade.png"
+                alt="Retro-Source Arcade Logo"
+                className="h-10 w-auto bg-white"
+              />
+              <strong>{shop.name}</strong>
+            </NavLink>
+            <HeaderMenu
+              menu={menu}
+              viewport="desktop"
+              primaryDomainUrl={header.shop.primaryDomain.url}
+              publicStoreDomain={publicStoreDomain}
+            />
+            <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+          </div>
+        </div>
+      </div>
     </header>
   );
 }
@@ -88,17 +105,55 @@ export function HeaderMenu({
 function HeaderCtas({isLoggedIn, cart}) {
   return (
     <nav className="header-ctas" role="navigation">
-      <HeaderMenuMobileToggle />
-      <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        <Suspense fallback="Sign in">
-          <Await resolve={isLoggedIn} errorElement="Sign in">
-            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
-          </Await>
-        </Suspense>
-      </NavLink>
       <SearchToggle />
       <CartToggle cart={cart} />
+      <HeaderMenuMobileToggle />
     </nav>
+  );
+}
+
+function SearchToggle() {
+  const {open} = useAside();
+  return (
+    <button className="reset flex flex-row" onClick={() => open('search')}>
+      <span className="header_searchSpan">Search</span>
+      <img src="/images/search.svg" alt="Search" className="w-5 h-5" />
+    </button>
+  );
+}
+
+/**
+ * @param {{count: number | null}}
+ */
+function CartBadge({count}) {
+  const {open} = useAside();
+  const {publish, shop, cart, prevCart} = useAnalytics();
+
+  return (
+    <a
+      className="flex flex-row item"
+      href="/cart"
+      onClick={(e) => {
+        e.preventDefault();
+        open('cart');
+        publish('cart_viewed', {
+          cart,
+          prevCart,
+          shop,
+          url: window.location.href || '',
+        });
+      }}
+    >
+      <span className="header_cartSpan flex items-center">
+        <p>Cart</p>
+      </span>
+      <div className="header_cartCtrl relative flex flex-row justify-self-start items-center">
+        <div className="cart_count absolute top-[-18px] left-[6px]">
+          {count === null ? <span>&nbsp;</span> : count}
+        </div>
+        <img src="/images/cart.svg" alt="Cart icon"></img>{' '}
+      </div>
+    </a>
   );
 }
 
@@ -113,42 +168,6 @@ function HeaderMenuMobileToggle() {
     </button>
   );
 }
-
-function SearchToggle() {
-  const {open} = useAside();
-  return (
-    <button className="reset" onClick={() => open('search')}>
-      Search
-    </button>
-  );
-}
-
-/**
- * @param {{count: number | null}}
- */
-function CartBadge({count}) {
-  const {open} = useAside();
-  const {publish, shop, cart, prevCart} = useAnalytics();
-
-  return (
-    <a
-      href="/cart"
-      onClick={(e) => {
-        e.preventDefault();
-        open('cart');
-        publish('cart_viewed', {
-          cart,
-          prevCart,
-          shop,
-          url: window.location.href || '',
-        });
-      }}
-    >
-      Cart {count === null ? <span>&nbsp;</span> : count}
-    </a>
-  );
-}
-
 /**
  * @param {Pick<HeaderProps, 'cart'>}
  */

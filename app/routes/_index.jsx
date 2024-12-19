@@ -2,6 +2,8 @@ import {defer} from '@shopify/remix-oxygen';
 import {Await, useLoaderData, Link} from '@remix-run/react';
 import {Suspense} from 'react';
 import {Image, Money} from '@shopify/hydrogen';
+import Carousel from '~/components/Carousel';
+import {newsList} from '~/data/newsData';
 
 /**
  * @type {MetaFunction}
@@ -62,10 +64,18 @@ function loadDeferredData({context}) {
 export default function Homepage() {
   /** @type {LoaderReturnData} */
   const data = useLoaderData();
+
+  /* eslint-disable no-console */
+  console.log('Homepage - loader data:', data); // Debugging line
+  /* eslint-enable no-console */
+
   return (
     <div className="home">
-      <FeaturedCollection collection={data.featuredCollection} />
-      <RecommendedProducts products={data.recommendedProducts} />
+      <div className="home_ctr ">
+        <Carousel items={newsList} />
+        <FeaturedCollection collection={data.featuredCollection} />
+        <RecommendedProducts products={data.recommendedProducts} />
+      </div>
     </div>
   );
 }
@@ -80,7 +90,7 @@ function FeaturedCollection({collection}) {
   const image = collection?.image;
   return (
     <Link
-      className="featured-collection"
+      className="featured-collection block"
       to={`/collections/${collection.handle}`}
     >
       {image && (
@@ -88,7 +98,7 @@ function FeaturedCollection({collection}) {
           <Image data={image} sizes="100vw" />
         </div>
       )}
-      <h1>{collection.title}</h1>
+      <h1 className="text-2xl font-semibold mt-4">{collection.title}</h1>
     </Link>
   );
 }
@@ -101,27 +111,32 @@ function FeaturedCollection({collection}) {
 function RecommendedProducts({products}) {
   return (
     <div className="recommended-products">
-      <h2>Recommended Products</h2>
+      <h2 className="text-2xl font-bold mb-4">Recommended Products</h2>
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={products}>
           {(response) => (
-            <div className="recommended-products-grid">
+            <div className="recommended-products-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {response
                 ? response.products.nodes.map((product) => (
                     <Link
                       key={product.id}
-                      className="recommended-product"
+                      className="recommended-product border rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300"
                       to={`/products/${product.handle}`}
                     >
                       <Image
                         data={product.images.nodes[0]}
                         aspectRatio="1/1"
                         sizes="(min-width: 45em) 20vw, 50vw"
+                        className="w-full h-48 object-cover"
                       />
-                      <h4>{product.title}</h4>
-                      <small>
-                        <Money data={product.priceRange.minVariantPrice} />
-                      </small>
+                      <div className="p-4">
+                        <h4 className="text-lg font-semibold">
+                          {product.title}
+                        </h4>
+                        <small className="text-gray-600">
+                          <Money data={product.priceRange.minVariantPrice} />
+                        </small>
+                      </div>
                     </Link>
                   ))
                 : null}

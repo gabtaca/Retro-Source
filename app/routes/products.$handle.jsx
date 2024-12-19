@@ -1,5 +1,7 @@
+// app/routes/products.$handle.jsx
+
 import {defer} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {useLoaderData, useNavigate} from '@remix-run/react';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -11,6 +13,8 @@ import {
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
+import AddToWishList from '~/components/AddToWishList';
+import {useState, useEffect} from 'react';
 
 /**
  * @type {MetaFunction<typeof loader>}
@@ -29,20 +33,12 @@ export const meta = ({data}) => {
  * @param {LoaderFunctionArgs} args
  */
 export async function loader(args) {
-  // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
-
-  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
-
-  return defer({...deferredData, ...criticalData});
+  const allProductHandles = await fetchAllProductHandles(args);
+  return defer({...deferredData, ...criticalData, allProductHandles});
 }
 
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- * @param {LoaderFunctionArgs}
- */
 async function loadCriticalData({context, params, request}) {
   const {handle} = params;
   const {storefront} = context;
@@ -53,93 +49,211 @@ async function loadCriticalData({context, params, request}) {
 
   const [{product}] = await Promise.all([
     storefront.query(PRODUCT_QUERY, {
-      variables: {handle, selectedOptions: getSelectedProductOptions(request)},
+      variables: {
+        handle,
+        selectedOptions: getSelectedProductOptions(request),
+      },
     }),
-    // Add other queries here, so that they are loaded in parallel
   ]);
 
   if (!product?.id) {
     throw new Response(null, {status: 404});
   }
 
-  return {
-    product,
-  };
+  return {product};
 }
 
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- * @param {LoaderFunctionArgs}
- */
 function loadDeferredData({context, params}) {
-  // Put any API calls that is not critical to be available on first page render
-  // For example: product reviews, product recommendations, social feeds.
-
   return {};
 }
 
-export default function Product() {
-  /** @type {LoaderReturnData} */
-  const {product} = useLoaderData();
+/**
+ * Function to fetch all product handles from Shopify Storefront API
+ * @param {LoaderFunctionArgs} args
+ * @returns {Promise<string[]>} - Array of product handles
+ */
+async function fetchAllProductHandles({context}) {
+  const {storefront} = context;
 
-  // Optimistically selects a variant with given available variant information
+  const query = `
+    query GetAllProductHandles($first: Int!, $after: String) {
+      products(first: $first, after: $after) {
+        edges {
+          node {
+            handle
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    first: 250, // Adjust based on your store's product count
+    after: null,
+  };
+
+  const allHandles = [];
+
+  try {
+    let hasNextPage = true;
+    let cursor = null;
+
+    while (hasNextPage) {
+      const response = await storefront.query(query, {
+        variables: {...variables, after: cursor},
+      });
+
+      const products = response.products.edges;
+      products.forEach((edge) => {
+        allHandles.push(edge.node.handle);
+      });
+
+      hasNextPage = response.products.pageInfo.hasNextPage;
+      cursor = response.products.pageInfo.endCursor;
+    }
+
+    return allHandles;
+  } catch (error) {
+    console.error('Error fetching product handles:', error);
+    return [];
+  }
+}
+
+export default function Product() {
+  const {product, allProductHandles} = useLoaderData();
+  const [activateWishlist, setActivateWishlist] = useState(false);
+  const navigate = useNavigate(); // For navigation
+
+  // Listen for Arcade Button A Press and Navigation
+  useEffect(() => {
+    const handleArcadePress = (event) => {
+      if (event.detail === 'A') {
+        setActivateWishlist(true); // Trigger wishlist toggle
+      }
+    };
+
+    const handleNavigation = (event) => {
+      const direction = event.detail;
+      if (direction === 'LEFT' || direction === 'RIGHT') {
+        navigateToAdjacentProduct(direction);
+      }
+    };
+
+    window.addEventListener('arcadeButtonPress', handleArcadePress);
+    window.addEventListener('arcadeNavigation', handleNavigation);
+
+    return () => {
+      window.removeEventListener('arcadeButtonPress', handleArcadePress);
+      window.removeEventListener('arcadeNavigation', handleNavigation);
+    };
+  }, [product.id, allProductHandles]);
+
   const selectedVariant = useOptimisticVariant(
     product.selectedOrFirstAvailableVariant,
     getAdjacentAndFirstAvailableVariants(product),
   );
 
-  // Sets the search param to the selected variant without navigation
-  // only when no search params are set in the url
   useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
 
-  // Get the product options array
   const productOptions = getProductOptions({
     ...product,
     selectedOrFirstAvailableVariant: selectedVariant,
   });
 
-  const {title, descriptionHtml} = product;
+  /**
+   * Function to handle wishlist toggle reset
+   * @param {string} id - Product ID
+   * @param {boolean} newState - New wishlist state
+   */
+  const handleToggleFavorite = (id, newState) => {
+    if (activateWishlist) {
+      setActivateWishlist(false); // Reset the trigger
+    }
+  };
+
+  /**
+   * Function to navigate to the next or previous product
+   * @param {string} direction - 'LEFT' or 'RIGHT'
+   */
+  const navigateToAdjacentProduct = (direction) => {
+    if (!allProductHandles || allProductHandles.length === 0) {
+      console.error('No product handles available for navigation.');
+      return;
+    }
+
+    const currentIndex = allProductHandles.indexOf(product.handle);
+
+    if (currentIndex === -1) {
+      console.error(`Current product handle "${product.handle}" not found.`);
+      return;
+    }
+
+    let newIndex;
+    if (direction === 'LEFT') {
+      newIndex =
+        currentIndex > 0 ? currentIndex - 1 : allProductHandles.length - 1;
+    } else if (direction === 'RIGHT') {
+      newIndex =
+        currentIndex < allProductHandles.length - 1 ? currentIndex + 1 : 0;
+    }
+
+    const newHandle = allProductHandles[newIndex];
+    if (newHandle) {
+      navigate(`/products/${newHandle}`);
+    } else {
+      console.error(`Product handle "${newHandle}" not found.`);
+    }
+  };
 
   return (
-    <div className="product">
-      <ProductImage image={selectedVariant?.image} />
-      <div className="product-main">
-        <h1>{title}</h1>
-        <ProductPrice
-          price={selectedVariant?.price}
-          compareAtPrice={selectedVariant?.compareAtPrice}
+    <div className="product flex flex-row justify-center pt-4">
+      <div className="home_crt-products">
+        <ProductImage image={selectedVariant?.image} />
+        <div className="product-main">
+          <h1>{product.title}</h1>
+          <ProductPrice
+            price={selectedVariant?.price}
+            compareAtPrice={selectedVariant?.compareAtPrice}
+          />
+          <div className="products_btnCtrl flex flex-col gap-4 mt-4">
+            {/* Wishlist Button */}
+            <AddToWishList
+              productId={product.id}
+              activateWishlist={activateWishlist}
+              onToggleFavorite={handleToggleFavorite}
+              className="text-[1.5rem]"
+            />
+            {/* Add to Cart Form */}
+            <ProductForm
+              productOptions={productOptions}
+              selectedVariant={selectedVariant}
+            />
+          </div>
+          <p>
+            <strong>Description</strong>
+          </p>
+          <div dangerouslySetInnerHTML={{__html: product.descriptionHtml}} />
+        </div>
+        <Analytics.ProductView
+          data={{
+            products: [
+              {
+                id: product.id,
+                title: product.title,
+                price: selectedVariant?.price.amount || '0',
+                vendor: product.vendor,
+                variantId: selectedVariant?.id || '',
+                variantTitle: selectedVariant?.title || '',
+                quantity: 1,
+              },
+            ],
+          }}
         />
-        <br />
-        <ProductForm
-          productOptions={productOptions}
-          selectedVariant={selectedVariant}
-        />
-        <br />
-        <br />
-        <p>
-          <strong>Description</strong>
-        </p>
-        <br />
-        <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-        <br />
       </div>
-      <Analytics.ProductView
-        data={{
-          products: [
-            {
-              id: product.id,
-              title: product.title,
-              price: selectedVariant?.price.amount || '0',
-              vendor: product.vendor,
-              variantId: selectedVariant?.id || '',
-              variantTitle: selectedVariant?.title || '',
-              quantity: 1,
-            },
-          ],
-        }}
-      />
     </div>
   );
 }
@@ -208,10 +322,10 @@ const PRODUCT_FRAGMENT = `#graphql
         }
       }
     }
-    selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
+    selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions) {
       ...ProductVariant
     }
-    adjacentVariants (selectedOptions: $selectedOptions) {
+    adjacentVariants(selectedOptions: $selectedOptions) {
       ...ProductVariant
     }
     seo {
@@ -235,7 +349,3 @@ const PRODUCT_QUERY = `#graphql
   }
   ${PRODUCT_FRAGMENT}
 `;
-
-/** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
-/** @template T @typedef {import('@remix-run/react').MetaFunction<T>} MetaFunction */
-/** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */

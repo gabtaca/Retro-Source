@@ -2,6 +2,8 @@ import {defer} from '@shopify/remix-oxygen';
 import {Await, useLoaderData, Link} from '@remix-run/react';
 import {Suspense} from 'react';
 import {Image, Money} from '@shopify/hydrogen';
+import Carousel from '~/components/Carousel';
+import {newsList} from '~/data/newsData';
 
 /**
  * @type {MetaFunction}
@@ -63,9 +65,15 @@ export default function Homepage() {
   /** @type {LoaderReturnData} */
   const data = useLoaderData();
   return (
-    <div className="home">
-      <FeaturedCollection collection={data.featuredCollection} />
-      <RecommendedProducts products={data.recommendedProducts} />
+    <div className="home flex flex-col items-center w-full">
+      <div className="home_crt my-2">
+        <h1 className="text-center text-4xl font-bold p-5 m-0">
+          Welcome to Our Shop!
+        </h1>
+        <Carousel items={newsList} />
+        <FeaturedCollection collection={data.featuredCollection} />
+        <RecommendedProducts products={data.recommendedProducts} />
+      </div>
     </div>
   );
 }

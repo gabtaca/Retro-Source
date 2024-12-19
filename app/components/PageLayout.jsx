@@ -9,6 +9,7 @@ import {
   SearchFormPredictive,
 } from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
+import ArcadeBody from '~/components/ArcadeBody';
 
 /**
  * @param {PageLayoutProps}
@@ -23,9 +24,9 @@ export function PageLayout({
 }) {
   return (
     <Aside.Provider>
+      <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
       <CartAside cart={cart} />
       <SearchAside />
-      <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
       {header && (
         <Header
           header={header}
@@ -35,6 +36,8 @@ export function PageLayout({
         />
       )}
       <main>{children}</main>
+      {/* Arcade Body */}
+      <ArcadeBody />
       <Footer
         footer={footer}
         header={header}
@@ -74,13 +77,20 @@ function SearchAside() {
                 name="q"
                 onChange={fetchResults}
                 onFocus={fetchResults}
-                placeholder="Search"
+                placeholder="Find the game you want..."
                 ref={inputRef}
                 type="search"
                 list={queriesDatalistId}
+                className="search-input bg-lime-100" // Optional: Add a class for styling
               />
               &nbsp;
-              <button onClick={goToSearch}>Search</button>
+              <button onClick={goToSearch} className="search-button">
+                <img
+                  src="/images/search.svg"
+                  alt="Search"
+                  className="search-icon cursor-pointer"
+                />
+              </button>
             </>
           )}
         </SearchFormPredictive>

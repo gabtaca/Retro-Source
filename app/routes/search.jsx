@@ -9,7 +9,7 @@ import {getEmptyPredictiveSearchResult} from '~/lib/search';
  * @type {MetaFunction}
  */
 export const meta = () => {
-  return [{title: `Hydrogen | Search`}];
+  return [{title: `Hydrogen | Bob`}];
 };
 
 /**
@@ -47,12 +47,14 @@ export default function SearchPage() {
             <input
               defaultValue={term}
               name="q"
-              placeholder="Search…"
+              placeholder="Find the game you want"
               ref={inputRef}
               type="search"
             />
             &nbsp;
-            <button type="submit">Search</button>
+            <button type="submit">
+              <img src="./images/search.svg" alt="Search icon"></img>
+            </button>
           </>
         )}
       </SearchForm>

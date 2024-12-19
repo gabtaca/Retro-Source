@@ -47,12 +47,18 @@ export default function SearchPage() {
             <input
               defaultValue={term}
               name="q"
-              placeholder="Search…"
+              placeholder="Find the game you need..."
               ref={inputRef}
               type="search"
             />
             &nbsp;
-            <button type="submit">Search</button>
+            <button type="submit">
+              <img
+                src="/images/search.svg"
+                alt="Search"
+                className="search-icon cursor-pointer"
+              />
+            </button>
           </>
         )}
       </SearchForm>
