@@ -61,6 +61,26 @@ img {
   }
 }
 
+.home_crt-collections {
+  width: 100%;
+  height: 375px;
+  overflow-y: scroll;
+  border-radius: 20px;
+  background: radial-gradient(
+    circle,
+    #d2e9e2 20%,
+    #8fc2ad 60%,
+    #5e8c77 90%,
+    #1b2f29 100%
+  );
+  padding: 30px;
+  box-shadow: inset 0px 10px 30px rgba(0, 0, 0, 0.6),
+    inset 0px -10px 30px rgba(0, 0, 0, 0.8), 0px 0px 30px 5px rgba(0, 0, 0, 0.8);
+  @media (min-width: 30em) {
+    height: 100%;
+  }
+}
+
 .arcade-button {
   @apply text-white border-x-2 border-b-4 border-zinc-900 bg-zinc-700 p-2 rounded-full shadow-md active:shadow-sm hover:bg-gray-400 active:bg-zinc-800 hover:text-black;
 }
@@ -503,6 +523,31 @@ button.reset:hover:not(:has(> *)) {
   width: 100%;
 }
 
+
+/*
+* --------------------------------------------------
+* Filters/collections.$handle
+* --------------------------------------------------
+*/
+
+.filter-section {
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
 /*
 * --------------------------------------------------
 * routes/products.$handle.tsx
