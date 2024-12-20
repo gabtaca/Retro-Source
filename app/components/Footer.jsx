@@ -1,10 +1,18 @@
 import {Suspense} from 'react';
 import {Await, NavLink} from '@remix-run/react';
+import {Fragment, useState, useEffect} from 'react';
 
 /**
  * @param {FooterProps}
  */
 export function Footer({footer: footerPromise, header, publicStoreDomain}) {
+  const [year, setYear] = useState(new Date().getFullYear());
+
+  useEffect(() => {
+    // Update the year when the component mounts
+    setYear(new Date().getFullYear());
+  }, []);
+
   return (
     <Suspense>
       <Await resolve={footerPromise}>
@@ -17,6 +25,12 @@ export function Footer({footer: footerPromise, header, publicStoreDomain}) {
                 publicStoreDomain={publicStoreDomain}
               />
             )}
+            <Fragment>
+              <div className="pt-lg-10 flex flex-col items-end p-5">
+                <p className='text-zinc-200'>Gabriel Taca</p>
+                <p className='text-zinc-200'>{`© ${year}. All Rights Reserved.`}</p>
+              </div>
+            </Fragment>
           </footer>
         )}
       </Await>

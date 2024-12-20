@@ -1,20 +1,36 @@
-import {Link, useNavigate} from '@remix-run/react';
-import {AddToCartButton} from './AddToCartButton';
-import {useAside} from './Aside';
+import React, { forwardRef, useImperativeHandle, useState } from 'react';
+import { Link, useNavigate } from '@remix-run/react';
+import { AddToCartButton } from './AddToCartButton';
+import { useAside } from './Aside';
 
-/**
- * @param {{
- *   productOptions: MappedProductOptions[];
- *   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
- * }}
- */
-export function ProductForm({productOptions, selectedVariant}) {
+export const ProductForm = forwardRef(function ProductForm(
+  { productOptions, selectedVariant },
+  ref
+) {
   const navigate = useNavigate();
-  const {open} = useAside();
+  const { open } = useAside();
+  const [showParticles, setShowParticles] = useState(false);
+
+  // Expose a `submit` method via the `ref`
+  useImperativeHandle(ref, () => ({
+    submit: () => {
+      if (selectedVariant?.availableForSale) {
+        document.getElementById('add-to-cart-button').click();
+        triggerCoinParticles();
+      }
+    },
+  }));
+
+  // Function to trigger particle effect
+  const triggerCoinParticles = () => {
+    setShowParticles(true);
+    setTimeout(() => setShowParticles(false), 1000); // Remove particles after 1 second
+  };
+
   return (
-    <div className="product-form">
+    <div className="product-form relative">
+      {/* Render product options */}
       {productOptions.map((option) => {
-        // If there is only a single value in the option values, don't display the option
         if (option.optionValues.length === 1) return null;
 
         return (
@@ -34,10 +50,6 @@ export function ProductForm({productOptions, selectedVariant}) {
                 } = value;
 
                 if (isDifferentProduct) {
-                  // SEO
-                  // When the variant is a combined listing child product
-                  // that leads to a different url, we need to render it
-                  // as an anchor tag
                   return (
                     <Link
                       className="product-options-item"
@@ -57,11 +69,6 @@ export function ProductForm({productOptions, selectedVariant}) {
                     </Link>
                   );
                 } else {
-                  // SEO
-                  // When the variant is an update to the search param,
-                  // render it as a button with javascript navigating to
-                  // the variant so that SEO bots do not index these as
-                  // duplicated links
                   return (
                     <button
                       type="button"
@@ -95,36 +102,53 @@ export function ProductForm({productOptions, selectedVariant}) {
           </div>
         );
       })}
-      <AddToCartButton
-        disabled={!selectedVariant || !selectedVariant.availableForSale}
-        onClick={() => {
-          open('cart');
-        }}
-        lines={
-          selectedVariant
-            ? [
-                {
-                  merchandiseId: selectedVariant.id,
-                  quantity: 1,
-                  selectedVariant,
-                },
-              ]
-            : []
-        }
-      >
-        {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
-      </AddToCartButton>
+
+      {/* Add to Cart Button */}
+      <div className="addcart_btn flex flex-row justify-between items-center relative">
+        <div className="flex flex-row">
+          <div className="wishlist-btn mr-2"></div>
+          <p className="font-bold text-xl">B</p>
+        </div>
+        <AddToCartButton
+          id="add-to-cart-button"
+          style={{
+            paddingLeft: '10px',
+            marginTop: '2rem',
+            color: '#F43596',
+          }}
+          disabled={!selectedVariant || !selectedVariant.availableForSale}
+          onClick={() => {
+            open('cart');
+            triggerCoinParticles();
+          }}
+          lines={
+            selectedVariant
+              ? [
+                  {
+                    merchandiseId: selectedVariant.id,
+                    quantity: 1,
+                  },
+                ]
+              : []
+          }
+        >
+          🛒
+          {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
+        </AddToCartButton>
+        <img
+          className="ml-8 h-4 w-4"
+          src="/images/coin.png"
+          alt="cartoon coin"
+        />
+      </div>
+
+      {/* Particle Effect */}
+      {showParticles && <CoinParticles />}
     </div>
   );
-}
+});
 
-/**
- * @param {{
- *   swatch?: Maybe<ProductOptionValueSwatch> | undefined;
- *   name: string;
- * }}
- */
-function ProductOptionSwatch({swatch, name}) {
+function ProductOptionSwatch({ swatch, name }) {
   const image = swatch?.image?.previewImage?.url;
   const color = swatch?.color;
 
@@ -143,7 +167,25 @@ function ProductOptionSwatch({swatch, name}) {
   );
 }
 
-/** @typedef {import('@shopify/hydrogen').MappedProductOptions} MappedProductOptions */
-/** @typedef {import('@shopify/hydrogen/storefront-api-types').Maybe} Maybe */
-/** @typedef {import('@shopify/hydrogen/storefront-api-types').ProductOptionValueSwatch} ProductOptionValueSwatch */
-/** @typedef {import('storefrontapi.generated').ProductFragment} ProductFragment */
+function CoinParticles() {
+  const stars = Array.from({ length: 7 }, (_, i) => i); // Create an array of 7 particles
+  return (
+    <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+      {stars.map((star) => (
+        <img
+          key={star}
+          src="/images/coin.png"
+          alt="Coin Particle"
+          className="particle-star absolute animate-pop"
+          style={{
+            width: `${Math.random() * 10 + 10}px`,
+            height: `${Math.random() * 10 + 10}px`,
+            top: `${Math.random() * 50}%`,
+            left: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 0.2}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}

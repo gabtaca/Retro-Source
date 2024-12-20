@@ -1,15 +1,19 @@
-import Contact from '~/components/Contact';
-import {useLoaderData} from '@remix-run/react';
-
 export async function loader({context}) {
-  const data = await context.storefront.query(CONTACT_QUERY);
-  return {contact: data.metaobjects.nodes};
+  const contactData = await context.storefront.query(CONTACT_QUERY);
+  const faqData = {
+    "What makes our indie games unique?": "All our games are crafted in-house...",
+    // Other FAQs here
+  };
+  return {contact: contactData.metaobjects.nodes, faq: faqData};
 }
+
 export default function ContactInfos() {
-  const {contact} = useLoaderData();
+  const {contact, faq} = useLoaderData();
   return (
     <div>
       <h1>Contact</h1>
+      <p>If you have questions, feel free to reach out to us using the form below.</p>
+      <FAQ faqs={faq} />
       <Contact
         adress={contact[0].street_adress.value}
         phone={contact[0].phone_number.value}

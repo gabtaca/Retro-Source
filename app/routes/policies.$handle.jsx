@@ -45,7 +45,7 @@ export default function Policy() {
   const {policy} = useLoaderData();
 
   return (
-    <div className="policy">
+    <div className="policy bg-zinc-400 p-5">
       <br />
       <br />
       <div>

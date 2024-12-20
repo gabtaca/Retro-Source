@@ -14,7 +14,7 @@ import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 import AddToWishList from '~/components/AddToWishList';
-import {useState, useEffect} from 'react';
+import {useRef, useState, useEffect} from 'react';
 
 /**
  * @type {MetaFunction<typeof loader>}
@@ -126,31 +126,34 @@ async function fetchAllProductHandles({context}) {
 export default function Product() {
   const {product, allProductHandles} = useLoaderData();
   const [activateWishlist, setActivateWishlist] = useState(false);
-  const navigate = useNavigate(); // For navigation
+  const [activateAddToCart, setActivateAddToCart] = useState(false);
+  const navigate = useNavigate();
+  const productFormRef = useRef(null);
 
   // Listen for Arcade Button A Press and Navigation
   useEffect(() => {
-    const handleArcadePress = (event) => {
-      if (event.detail === 'A') {
+    const handleArcadeInput = (event) => {
+      const {detail} = event;
+
+      if (detail === 'A') {
         setActivateWishlist(true); // Trigger wishlist toggle
+      } else if (detail === 'B' && productFormRef.current) {
+        productFormRef.current.submit(); // Trigger "Add to Cart"
+      } else if (detail === 'LEFT' || detail === 'RIGHT') {
+        navigateToAdjacentProduct(detail); // Navigate to adjacent product
       }
     };
 
-    const handleNavigation = (event) => {
-      const direction = event.detail;
-      if (direction === 'LEFT' || direction === 'RIGHT') {
-        navigateToAdjacentProduct(direction);
-      }
-    };
-
-    window.addEventListener('arcadeButtonPress', handleArcadePress);
-    window.addEventListener('arcadeNavigation', handleNavigation);
+    // Add event listeners for arcade inputs
+    window.addEventListener('arcadeButtonPress', handleArcadeInput);
+    window.addEventListener('arcadeNavigation', handleArcadeInput);
 
     return () => {
-      window.removeEventListener('arcadeButtonPress', handleArcadePress);
-      window.removeEventListener('arcadeNavigation', handleNavigation);
+      // Clean up event listeners
+      window.removeEventListener('arcadeButtonPress', handleArcadeInput);
+      window.removeEventListener('arcadeNavigation', handleArcadeInput);
     };
-  }, [product.id, allProductHandles]);
+  }, [product.id, allProductHandles, productFormRef]);
 
   const selectedVariant = useOptimisticVariant(
     product.selectedOrFirstAvailableVariant,
@@ -219,7 +222,7 @@ export default function Product() {
             price={selectedVariant?.price}
             compareAtPrice={selectedVariant?.compareAtPrice}
           />
-          <div className="products_btnCtrl flex flex-col gap-4 mt-4">
+          <div className="products_btnCtrl flex flex-col w-[35vw] gap-4 p-5">
             {/* Wishlist Button */}
             <AddToWishList
               productId={product.id}
@@ -227,8 +230,8 @@ export default function Product() {
               onToggleFavorite={handleToggleFavorite}
               className="text-[1.5rem]"
             />
-            {/* Add to Cart Form */}
             <ProductForm
+              ref={productFormRef}
               productOptions={productOptions}
               selectedVariant={selectedVariant}
             />

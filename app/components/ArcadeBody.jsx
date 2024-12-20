@@ -29,6 +29,11 @@ export default function ArcadeBody() {
     window.dispatchEvent(event); // Dispatch event globally
   };
 
+  const handleButtonBPress = () => {
+    const event = new CustomEvent('arcadeButtonPress', { detail: 'B' });
+    window.dispatchEvent(event);
+  };
+
   /**
    * Dispatches custom events for navigation (Left/Right Buttons)
    */
@@ -136,7 +141,7 @@ export default function ArcadeBody() {
                 onClick={(e) => {
                   e.stopPropagation();
                   playSound('/sounds/key-punch.mp3');
-                  // Additional functionality for Button B can be added here
+                  
                 }}
                 onMouseDown={() => setIsButtonBPressed(true)}
                 onMouseUp={() => setIsButtonBPressed(false)}

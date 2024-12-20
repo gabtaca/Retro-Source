@@ -60,39 +60,55 @@ export function HeaderMenu({
 
   return (
     <nav className={className} role="navigation">
-      {viewport === 'mobile' && (
-        <NavLink
-          end
-          onClick={close}
-          prefetch="intent"
-          style={activeLinkStyle}
-          to="/"
-        >
-          Home
-        </NavLink>
-      )}
       {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
         if (!item.url) return null;
 
-        // if the url is internal, we strip the domain
+        // Determine URL for internal/external links
         const url =
           item.url.includes('myshopify.com') ||
           item.url.includes(publicStoreDomain) ||
           item.url.includes(primaryDomainUrl)
             ? new URL(item.url).pathname
             : item.url;
+
         return (
-          <NavLink
-            className="header-menu-item"
-            end
-            key={item.id}
-            onClick={close}
-            prefetch="intent"
-            style={activeLinkStyle}
-            to={url}
-          >
-            {item.title}
-          </NavLink>
+          <div className="menu-item" key={item.id}>
+            <NavLink
+              className="header-menu-item"
+              end
+              onClick={close}
+              prefetch="intent"
+              style={activeLinkStyle}
+              to={url}
+            >
+              {item.title}
+            </NavLink>
+            {/* Render Submenu if Children Exist */}
+            {item.items?.length > 0 && (
+              <ul className="submenu">
+                {item.items.map((child) => (
+                  <li key={child.id}>
+                    <NavLink
+                      className="submenu-item"
+                      end
+                      onClick={close}
+                      prefetch="intent"
+                      style={activeLinkStyle}
+                      to={
+                        child.url.includes('myshopify.com') ||
+                        child.url.includes(publicStoreDomain) ||
+                        child.url.includes(primaryDomainUrl)
+                          ? new URL(child.url).pathname
+                          : child.url
+                      }
+                    >
+                      {child.title}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         );
       })}
     </nav>

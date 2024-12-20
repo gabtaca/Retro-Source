@@ -265,12 +265,42 @@ button.reset:hover:not(:has(> *)) {
 .header-menu-desktop {
   display: none;
   align-items: center;
+  position: relative;
   grid-gap: 1rem;
   @media (min-width: 45em) {
     display: flex;
     grid-gap: 1rem;
     margin-left: 3rem;
   }
+}
+
+.header-menu-desktop .submenu {
+  display: none;
+  position: absolute;
+  top: 70%;
+  right: -40%;
+  background: white;
+  list-style: none;
+  padding: 0.5rem 0;
+  margin: 0;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.header-menu-desktop .menu-item:hover .submenu {
+  display: block;
+}
+
+.header-menu-desktop .submenu-item {
+  padding: 0.5rem 1rem;
+  color: black;
+  text-decoration: none;
+}
+
+.header-menu-desktop .submenu-item:hover {
+  background: #f4f4f4;
+  color: #2b2e31;
 }
 
 .header-menu-item {
@@ -434,6 +464,42 @@ button.reset:hover:not(:has(> *)) {
 
 /*
 * --------------------------------------------------
+* FAQ
+* --------------------------------------------------
+*/
+
+.faq-section {
+  margin: 2rem 0;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.faq-section h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.faq-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.faq-section li {
+  margin-bottom: 1.5rem;
+}
+
+.faq-section h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.faq-section p {
+  font-size: 1rem;
+  color: #555;
+}
+/*
+* --------------------------------------------------
 * routes/__index
 * --------------------------------------------------
 */
@@ -529,10 +595,13 @@ button.reset:hover:not(:has(> *)) {
 * Filters/collections.$handle
 * --------------------------------------------------
 */
+.collection {
+  padding: 2rem;
+}
 
 .filter-section {
   padding: 1rem;
-  background-color: #f9fafb;
+  background-color: transparent;
   border-radius: 0.5rem;
   margin-bottom: 1.5rem;
 }
@@ -702,6 +771,38 @@ button.reset:hover:not(:has(> *)) {
   100% {
     content: url('/images/btn_arc-pressed.png');
   }
+}
+
+.addcart_btn {
+
+}
+
+.addcart-btn > form {
+padding-left: 8px;
+}
+
+.addcart-action {
+  font-family: 'Silkscreen';
+  font-size: small;
+  font-weight: 200;
+}
+
+#add-to-cart-button {
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* This corresponds to 'gap-2' */
+  font-weight: bold; /* This corresponds to 'font-bold' */
+  font-size: 0.875rem; /* This corresponds to 'text-sm' */
+  padding-left: 0.5rem; /* This corresponds to 'px-2' */
+  padding-right: 0.5rem;
+  color: #4a4a4a; /* This corresponds to 'text-gray-800' */
+  transition: color 0.2s ease-in-out;
+}
+
+.custom-button:hover {
+  color: #000000; /* This corresponds to 'hover:text-black' */
 }
 
 /* Apply the animation to the Arcade Button */

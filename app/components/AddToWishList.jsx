@@ -75,7 +75,7 @@ export default function AddToWishList({
   };
 
   return (
-    <div className={`wishlist-btns ${className} flex items-center relative`}>
+    <div className={`wishlist-btns ${className} flex flex-row justify-between items-center relative`}>
       {/* Static Arc Button Image */}
       <div className="flex flex-row items-center">
         <div className="wishlist-btn mr-2">
@@ -87,7 +87,7 @@ export default function AddToWishList({
       {/* Add to Wishlist Text */}
       <button
         onClick={toggleWishlist}
-        className="wishlist-action cursor-pointer relative flex items-center gap-2 font-bold text-sm px-2 text-gray-800 hover:text-black"
+        className="wishlist-action cursor-pointer relative flex items-center gap-2 font-bold text-sm text-gray-800 hover:text-black"
         aria-label={isActive ? '🗑️from Wishlist' : 'Add to wishlist'}
       >
         {isActive ? '🗑️from Wishlist' : 'Add to Wishlist'}
@@ -109,19 +109,21 @@ export default function AddToWishList({
  * Renders small star particles for animation.
  */
 function StarParticles() {
-  const stars = Array.from({length: 7}, (_, i) => i); // Create an array of 7 particles
+  const stars = Array.from({ length: 7 }, (_, i) => i); // Create an array of 7 particles
   return (
     <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
       {stars.map((star) => (
-        <div
+        <img
           key={star}
-          className="particle-star absolute bg-yellow-400 rounded-full animate-pop"
+          src="/images/star.png" // Replace with the actual path to your star image
+          alt="Star Particle"
+          className="particle-star absolute animate-pop"
           style={{
-            width: `${Math.random() * 5 + 3}px`,
-            height: `${Math.random() * 5 + 3}px`,
-            top: `${Math.random() * 50}%`,
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 0.5}s`,
+            width: `${Math.random() * 10 + 10}px`, // Random size between 10px and 20px
+            height: `${Math.random() * 10 + 10}px`,
+            top: `${Math.random() * 50}%`, // Random vertical position
+            left: `${Math.random() * 100}%`, // Random horizontal position
+            animationDelay: `${Math.random() * 0.2}s`, // Random delay for animation
           }}
         />
       ))}
