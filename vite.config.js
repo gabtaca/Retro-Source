@@ -5,8 +5,12 @@ import {vitePlugin as remix} from '@remix-run/dev';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import tailwindcss from '@tailwindcss/vite';
 
-
 export default defineConfig({
+  resolve: {
+    alias: {
+      '~/': `${path.resolve(__dirname, 'app')}/`, // Adjust this if your app root is not `app`
+    },
+  },
   plugins: [
     tailwindcss(),
     hydrogen(),
@@ -25,22 +29,10 @@ export default defineConfig({
     tsconfigPaths(),
   ],
   build: {
-    // Allow a strict Content-Security-Policy
-    // withtout inlining assets as base64:
     assetsInlineLimit: 0,
   },
   ssr: {
     optimizeDeps: {
-      /**
-       * Include dependencies here if they throw CJS<>ESM errors.
-       * For example, for the following error:
-       *
-       * > ReferenceError: module is not defined
-       * >   at /Users/.../node_modules/example-dep/index.js:1:1
-       *
-       * Include 'example-dep' in the array below.
-       * @see https://vitejs.dev/config/dep-optimization-options
-       */
       include: [],
     },
   },
