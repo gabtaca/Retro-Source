@@ -43,15 +43,9 @@ export default {
       }
 
       if (response.status === 404) {
-        /**
-         * Check for redirects only when there's a 404 from the app.
-         * If the redirect doesn't exist, then `storefrontRedirect`
-         * will pass through the 404 response.
-         */
-        return storefrontRedirect({
-          request,
-          response,
-          storefront: appLoadContext.storefront,
+        return new Response(null, {
+          status: 302,
+          headers: { Location: '/404' },
         });
       }
 

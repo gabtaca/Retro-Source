@@ -1,24 +1,36 @@
-export async function loader({context}) {
-  const contactData = await context.storefront.query(CONTACT_QUERY);
-  const faqData = {
-    "What makes our indie games unique?": "All our games are crafted in-house...",
-    // Other FAQs here
+import { useLoaderData } from '@remix-run/react';
+import Contact from '~/components/Contact';
+
+export async function loader({ context }) {
+  const [contactData] = await Promise.all([
+    context.storefront.query(CONTACT_QUERY),
+  ]);
+
+  // Validate contact data
+  if (!contactData?.metaobjects?.nodes || contactData.metaobjects.nodes.length === 0) {
+    throw new Response('No contact data found', { status: 404 });
+  }
+
+  return { 
+    contact: contactData.metaobjects.nodes,
   };
-  return {contact: contactData.metaobjects.nodes, faq: faqData};
 }
 
 export default function ContactInfos() {
-  const {contact, faq} = useLoaderData();
+  const { contact} = useLoaderData();
+
   return (
-    <div>
+    <div className='text-zinc-200'>
       <h1>Contact</h1>
-      <p>If you have questions, feel free to reach out to us using the form below.</p>
-      <FAQ faqs={faq} />
-      <Contact
-        adress={contact[0].street_adress.value}
-        phone={contact[0].phone_number.value}
-        mail={contact[0].e_mail.value}
-      />
+      {contact.length > 0 ? (
+        <Contact
+          address={contact[0].street_adress.value}
+          phone={contact[0].phone_number.value}
+          email={contact[0].e_mail.value}
+        />
+      ) : (
+        <p>Contact information is not available at the moment.</p>
+      )}
     </div>
   );
 }
@@ -28,9 +40,10 @@ query contact {
   metaobjects(type: "contact", first: 10) {
     nodes {
       id
-      street_adress: field(key:"street_adress") {value} 
-      phone_number: field(key:"phone_number") {value} 
-      e_mail: field(key:"e_mail") {value} 
+      street_adress: field(key: "street_adress") { value }
+      phone_number: field(key: "phone_number") { value }
+      e_mail: field(key: "e_mail") { value }
     }
   }
 }`;
+
